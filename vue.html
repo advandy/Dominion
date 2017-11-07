@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://unpkg.com/vue"></script>
+    <title></title>
+</head>
+<style type="text/css">
+img {
+    height: 300px
+}
+
+ul {
+    display: inline-block;
+    margin-right: 10px;
+    padding: 0;
+    list-style: none;
+}
+
+li {
+    margin: 0;
+    padding: 0;
+    height: 300px;
+    margin-bottom: -299.5px;
+    clear: both;
+    position: relative;
+}
+
+.move{
+     transition: transform 1s;
+     transform: rotate(45deg) translate(300px, 500px);
+}
+#app {
+    width: 100%
+}
+.buy {
+    margin-top: 300px;
+    margin-left: 55%;
+    width: 45%
+}
+
+</style>
+
+<body>
+    <div id="app">
+        <ul v-for="card in stack">
+            <li v-if="card.count===0" v-bind:title="card.name + ' used up'">
+                <img src="img/Blank.jpg">
+            </li>
+            <li v-else v-bind:class= "card.name" v-for="n in card.count" v-bind:title="card.count + ' left'">
+                <img v-bind:src="'img/' + card.name + '.jpg'" v-bind:style="'margin-left:'+ n*1 +'px'" v-bind:data-name="card.name">
+            </li>
+            <button type="button" class="buy" v-bind:disabled="!card.buyable" @click="buyCard(card)">buy <span> ({{card.count}} left)</span> </button>
+        </ul>
+    </div>
+    <script type="text/javascript">
+    var app = new Vue({
+        el: '#app',
+        data: {
+            stack: [
+                {
+                    name: "Copper",
+                    type: "Money",
+                    count: 60,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Silver",
+                    type: "Money",
+                    count: 30,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Gold",
+                    type: "Money",
+                    count: 10,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Estate",
+                    type: "Point",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Duchy",
+                    type: "Point",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Province",
+                    type: "Point",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Cellar",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Chapel",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Moat",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Village",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Woodcutter",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Workshop",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Smithy",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Militia",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Remodel",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Market",
+                    type: "Action",
+                    count: 12,
+                    buyable: true,
+                    styleclass: "null"
+                },
+                {
+                    name: "Mine",
+                    type: "Action",
+                    count: 2,
+                    buyable: true,
+                    styleclass: "null"
+                }
+            ]
+        },
+        methods: {
+            buyCard: function(card) {
+                var el = document.querySelector("."+ card.name);
+
+                if (card.count === 0) {
+                    return;
+                }
+                card.buyable = false;
+                el.setAttribute("class", "move");
+                setTimeout(function() {
+                    card.count--;
+                    if (card.count !== 0) {
+                        card.buyable = true;
+                    }
+                    el.setAttribute("class", card.name);
+                }, 400)
+            }
+        }
+    });
+    </script>
+</body>
+
+</html>

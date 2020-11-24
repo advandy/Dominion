@@ -1,0 +1,50 @@
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+<body>
+    <ul id="messages"></ul>
+    <form id="nick" action="">
+        <p name="nickname">Nickname</p>
+        <input id="nickname" autocomplete="off" /><button>Join the game</button>
+    </form>
+    <form id="start">
+        <input id="dfdf" autocomplete="off" />
+        <button>start</button>
+    </form>
+</body>
+
+<script>
+  $(function () {
+    window.socket = io();
+    $('#nick').submit(function(e) {
+      e.preventDefault(); // prevents page reloading
+      socket.emit('joined', $('#nickname').val());
+      $('#nick').remove();
+      return false;
+    });
+
+    $("#start").submit(function(e) {
+        e.preventDefault();
+        socket.emit("start");
+        $("#start").remove();
+        return false;
+    })
+
+    socket.on("joined", function(msg) {
+        $('#messages').append($('<li>').text(msg + " has joined the game"));
+    });
+
+    socket.on("left", function(msg) {
+        $('#messages').append($('<li>').text(msg + " has left the game"));
+    });
+
+    socket.on("game", function(event) {
+      debugger
+      console.log(event)
+    });
+  });
+
+  triggerEvent = function(event, payload) {
+    window.socket.emit("game", {event, payload})
+  }
+</script>

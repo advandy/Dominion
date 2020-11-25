@@ -11,7 +11,10 @@ class Controller {
 
     _startNewRound() {
         const handstack = this.game.currentPlayer.startNewRound();
-        this.io.to(this.game.currentPlayer.socket.id).emit("game", {"event": "new round", payload:handstack})
+        this.io.to(this.game.currentPlayer.socket.id).emit("game", {"event": "new round", payload:{
+            handStack: handstack,
+            gameStack: this.game.stack
+        }})
     }
 
     _buy(socket, msg) {
@@ -19,6 +22,7 @@ class Controller {
         this.game.currentPlayer.buy(this.game, msg.payload, (err, payload) => {
             if (!err) {
                 this.io.to(socket.id).emit("game", {"event": "bought", "payload": payload});
+                this.io.sockets.emit("broadcast", {gameStack: this.game.stack})
             } else {
                 this.io.to(socket.id).emit("game", {"event": "error", "payload": err.message});
             }
@@ -57,6 +61,7 @@ class Controller {
             if (msg.event == "buy") {
                 this._buy(socket, msg);
             } else if (msg.event == "finish_round") {
+                this.game.getNextPlayer();
                 this._startNewRound();                
             } else if (msg.event == "action") {
                 this._playActionCard(socket, msg)

@@ -1,14 +1,16 @@
-class JoinForm extends React.Component {
+import React from 'react';
+export default class JoinForm extends React.Component {
     constructor(props) {
       super(props);
+      this.socket = props.socket;
       this.state = {value: '', submitted: false, started: false};
   
       this.handleChange = this.handleChange.bind(this);
       this.handleSubmit = this.handleSubmit.bind(this);
-      socket.on("joined", () => {
-         debugger
+      this.socket.on("joined", (msg) => {
+         
       });
-      socket.on("game", () => {
+      this.socket.on("game", () => {
         this.setState({started: true})
       })
     }
@@ -19,14 +21,14 @@ class JoinForm extends React.Component {
   
     handleSubmit(event) {
       if (!!this.state.value) {
-        socket.emit('joined', this.state.value);
+        this.socket.emit('joined', this.state.value);
         this.setState({submitted: true});
       }
       event.preventDefault();
     }
 
     startGame = (event) =>{
-      socket.emit("start");
+      this.socket.emit("start");
       this.setState({started: true});
       event.preventDefault();
     }
@@ -54,8 +56,3 @@ class JoinForm extends React.Component {
         }
     }
   }
-
-  ReactDOM.render(
-    <JoinForm />,
-    document.getElementById('root')
-  );

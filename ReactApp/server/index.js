@@ -1,9 +1,16 @@
-const express = require("express")
+const express = require("express");
+const path = require("path");
 const app = express();
 const http = require('http').createServer(app);
-const io = require("socket.io")(http);
+const io = require("socket.io")(http, {
+    cors: {
+        origin: "http://localhost:3001",
+        methods: ["GET", "POST"]
+      }
+});
 const Controller = require("./Controller");
 
+app.use(express.static(path.join(__dirname, "..", "build")))
 app.use(express.static('public'))
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');

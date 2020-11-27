@@ -13,20 +13,18 @@ class Player {
 		this.readytoBuy = false;
 	}
 
-	initBuy() {
+	getCurrentValue(initBuy=false) {
 		if (!this.readyToBuy) {
 			this.valueSum = this.handStack.getValueSum();
-			this.readyToBuy = true;
+			this.readyToBuy = initBuy;
 		}
 
 		return this.valueSum;
 	}
 
 	buy(game, stack, callback) {
-		if (!this.readyToBuy) {
-			callback(new Error("call readyToBuy function first"));
-			return false;
-		} else if (this.buyCount < 1) {
+		this.getCurrentValue(true);
+		if (this.buyCount < 1) {
 			callback(new Error("No more buy"));
 			return false;
 		} else if (!game.stack[stack] || game.stack[stack].isEmpty()) {
@@ -44,10 +42,19 @@ class Player {
 			this.handStack.addCard(boughtCard);
 			this.buyCount--;
 			this.pointSum += boughtCard.getPoint();
-			callback(null, {handstack: this.handStack, buyCount: this.buyCount});
+			callback(null, {handStack: this.handStack, buyCount: this.buyCount});
 			return true;
 		}
 		return false;
+	}
+
+	_updateStaticActions(card) {
+		const staticAction = card.action;
+		this.buyCount += staticAction.xBuy;
+		this.actionCount += staticAction.xAction;
+		if (staticAction.xCard > 0) {
+			this.fetchCards(staticAction.xCard);
+		}
 	}
 
 	playActionCard(card_id, callback) {
@@ -68,8 +75,12 @@ class Player {
 				callback(new Error("action not enabled"));
 				return false;
 			}
+
+			this.actionCount--;
 			actionCard.useAction();
-			callback(null, actionCard);
+			this._updateStaticActions(actionCard);
+
+			callback(null, {handStack: this.handStack, actionCard: actionCard});
 			return true;
 		}
 

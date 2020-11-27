@@ -64,6 +64,15 @@ class Game {
 				}
 				return deck;
 			})(),
+			"Chapel": (function() {
+				var deck = new Deck();
+				for (var i = 0; i < 12; i++) {
+					// xBuy, xCard, xAction, xValue, fnAction
+					deck.addCard(new ActionCard("Chapel", 2, new Action(0, 0, 0, 0, null), temp));
+					temp++;
+				}
+				return deck;
+			})(),
 			"Moat": (function() {
 				var deck = new Deck();
 				for (var i = 0; i < 12; i++) {

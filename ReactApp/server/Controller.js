@@ -12,13 +12,16 @@ class Controller {
     _startNewRound() {
         const handstack = this.game.currentPlayer.startNewRound();
         this.io.to(this.game.currentPlayer.socket.id).emit("game", {"event": "new round", payload:{
-            handStack: handstack,
-            gameStack: this.game.stack
-        }})
+            handStack: handstack, status: {
+                buyCount: this.game.currentPlayer.buyCount,
+                actionCount: this.game.currentPlayer.actionCount,
+                value: this.game.currentPlayer.getCurrentValue()
+            }
+        }});
+        this.io.sockets.emit("broadcast", {gameStack: this.game.stack})
     }
 
     _buy(socket, msg) {
-        this.game.currentPlayer.initBuy();
         this.game.currentPlayer.buy(this.game, msg.payload, (err, payload) => {
             if (!err) {
                 this.io.to(socket.id).emit("game", {"event": "bought", "payload": payload});
@@ -30,7 +33,6 @@ class Controller {
     }
 
     _playActionCard(socket, msg) {
-        debugger
         const card_id = msg.payload;
         this.game.currentPlayer.playActionCard(card_id, (err, payload) => {
             if (!err) {
@@ -42,7 +44,7 @@ class Controller {
     }
 
     _takeActionCellar(socket, msg) {
-        // [card_id, card_id, ...]
+        // msg payload [card_id, card_id, ...]
         // Discard any number of cards, then draw that many
         let count = 0
         msg.payload.forEach((card_id) => {

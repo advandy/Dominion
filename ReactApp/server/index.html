@@ -13,6 +13,9 @@
 </body>
 
 <script src="ui/join_game.js" type="text/babel"></script>
+<script src="ui/Gameboard.js" type="text/babel"></script>
+<script src="ui/App.js" type="text/babel"></script>
+
 
 <script>
   $(function () {
@@ -24,6 +27,10 @@
 
     socket.on("left", function(msg) {
         $('#messages').append($('<li>').text(msg + " has left the game"));
+    });
+
+    socket.on("broadcast", function(msg) {
+      console.log(msg)
     });
 
     socket.on("game", function(event) {

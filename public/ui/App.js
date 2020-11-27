@@ -1,15 +1,15 @@
-import JoinForm from "join_game";
-
-
 class App extends React.Component {
     constructor(props) {
       super(props);
     }
     
     render() {
-        <div>
-            <JoinForm></JoinForm>
-        </div>
+        return (
+            <div>
+                <JoinForm></JoinForm>
+                <Gameboard></Gameboard>
+            </div>
+        )
     }
 }
 

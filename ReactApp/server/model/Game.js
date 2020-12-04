@@ -4,7 +4,7 @@ const Deck = require("./Deck")
 const Player = require("./Player")
 
 class Game {
-	constructor(maps) {
+	constructor(sessionMaps) {
 		let temp = 0
 		this.stack = {
 			"Gold": (function() {
@@ -156,8 +156,8 @@ class Game {
 			})()
 		};
         this.players = [];
-        for (var key in maps) {
-            const player = new Player(key, maps[key]);
+        for (var key in sessionMaps) {
+            const player = new Player(sessionMaps[key].alias, key, sessionMaps[key].socket);
             const initialCards = this.stack.Copper.fetchCards(7).concat(this.stack.Estate.fetchCards(3));
 			player.drawStack = new Deck(Deck.shuffle(initialCards));
 			this.players.push(player);
@@ -166,7 +166,7 @@ class Game {
 				this.players[this.players.length - 2].next = player;
 			}
 
-			if (this.players.length === Object.keys(maps).length) {
+			if (this.players.length === Object.keys(sessionMaps).length) {
 				player.next = this.players[0];
 			}
 

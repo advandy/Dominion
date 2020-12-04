@@ -13,6 +13,7 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
+    "frontend": "react-scripts start",
     "dev": "yarn run react-scripts start && (cd server && yarn start)",
     "start": "yarn run build && (cd server && yarn start)",
     "build": "react-scripts build",

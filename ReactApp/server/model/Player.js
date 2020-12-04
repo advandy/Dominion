@@ -1,9 +1,10 @@
 const Deck = require("./Deck")
 const {Card} = require("./Card")
 class Player {
-	constructor(name, socket) {
+	constructor(name, sessionID, socket) {
         this.name = name;
-        this.socket = socket;
+		this.sessionID = sessionID;
+		this.socket = socket;
 		this.drawStack = new Deck();
 		this.handStack = new Deck();
 		this.discardStack = new Deck();
@@ -20,6 +21,14 @@ class Player {
 		}
 
 		return this.valueSum;
+	}
+
+	getStatus() {
+		return {
+			buyCount: this.buyCount,
+			actionCount: this.actionCount,
+			value: this.getCurrentValue()
+		}
 	}
 
 	buy(game, stack, callback) {
@@ -42,7 +51,7 @@ class Player {
 			this.handStack.addCard(boughtCard);
 			this.buyCount--;
 			this.pointSum += boughtCard.getPoint();
-			callback(null, {handStack: this.handStack, buyCount: this.buyCount});
+			callback(null, {handStack: this.handStack, status: this.getStatus()});
 			return true;
 		}
 		return false;
@@ -80,13 +89,44 @@ class Player {
 			actionCard.useAction();
 			this._updateStaticActions(actionCard);
 
-			callback(null, {handStack: this.handStack, actionCard: actionCard});
+			callback(null, {handStack: this.handStack, actionCard: actionCard, status: this.getStatus()});
 			return true;
 		}
 
 		callback(new Error("no such action card"));
 		return false;
 	}
+
+	takeActionCellar(cards, callback) {
+        // cards [card_id, card_id, ...]
+        // Discard any number of cards, then draw that many
+        let count = 0
+        cards.forEach((card_id) => {
+            let card = this.handStack.discardCard(card_id);
+            if (!!card) {
+                this.discardStack.addCard(card)
+                count++;
+            }
+		});
+		
+		callback(null, {handStack:  this.fetchCards(count), status: this.getStatus()});
+		return true;
+	}
+	
+	takeActionChapel(cards, callback) {
+        // cards [card_id, card_id, ...]
+        // Trash up to four cards
+        let count = 0
+        cards.forEach((card_id) => {
+            if (count < 4) {
+                this.handStack.discardCard(card_id);
+                count++;
+            }
+		});
+		
+		callback(null, {handStack:  this.handStack, status: this.getStatus()});
+		return true;
+    }
 
 	fetchCards(count) {
 		if (count > this.drawStack.leftCount()) {

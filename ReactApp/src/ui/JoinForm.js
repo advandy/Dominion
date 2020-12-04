@@ -35,11 +35,11 @@ export default class JoinForm extends React.Component {
   
     render() {
         if (this.state.started) {
-          return <p>Welcome {this.state.value}, Game started!</p>
+          return <a>Welcome {this.state.value}, Game started!</a>
         } else if (this.state.submitted && !this.state.started) {
             return (
                 <div> 
-                  <p>Welcome {this.state.value}</p>
+                  <a>Welcome {this.state.value}</a>
                   <button onClick={this.startGame}>Start Game</button>
                 </div>
               )

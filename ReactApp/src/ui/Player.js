@@ -3,10 +3,12 @@ export default class Player extends React.Component {
     constructor(props) {
       super(props);
       this.socket = props.socket;
-      this.state = {handStack: null, deskStack: null};
+      this.state = {handStack: null, status: null};
       this.multiSelect = false;
+      this.multiSelectMax = 0; //Chapel action
       this.showAction = false;
       this.showDiscardCards = false; //Cellar action
+      this.showTrashCards = false; //Chapel action
       this.STACK = [
           "Copper", "Silver", "Gold", 
           "Estate", "Duchy", "Province", 
@@ -22,21 +24,19 @@ export default class Player extends React.Component {
             if (msg.event === "error") {
                 return alert(msg.payload);
             }
-            if (msg.event === "new round" || msg.event === "bought") {
-                return this.setState({handStack: msg.payload.handStack.cards})
-            }
     
             if (msg.event === "action_played") {
                 if (msg.payload.actionCard.name === "Cellar" && msg.payload.actionCard.status === "waiting") {
                     this.multiSelect = true;
                     this.showDiscardCards = true;
+                } else if (msg.payload.actionCard.name === "Chapel" && msg.payload.actionCard.status === "waiting") {
+                    this.multiSelect = true;
+                    this.showTrashCards = true;
+                    this.multiSelectMax = 4;
                 }
-                this.setState({handStack: msg.payload.handStack.cards});
             }
-
-            if (msg.event === "action_cellar_complete") {
-                this.setState({handStack: msg.payload.cards});
-            }
+ 
+            return  this.setState({handStack: msg.payload.handStack.cards, status: msg.payload.status});
         });
     }
 
@@ -57,14 +57,26 @@ export default class Player extends React.Component {
 
             if (selectedCard && selectedCard.type === "action" &&
                 !selectedCard.isUsed && selectedCard.enabled) {
-                    this.showAction = selectedCard.selected;
+                    this.showAction = selectedCard.selected && this.state.status && this.state.status.actionCount > 0;
                 }
 
         } else {
+            let count = 0;
             cards.forEach((card) => {
                 if (card.id === Number(id)) {
                     card.selected = !card.selected;
-                    return;
+                } 
+                
+                if (this.multiSelectMax !== 0 && card.selected) {
+                    count ++;
+                    if (count > this.multiSelectMax) {
+                        alert("Only up to " + this.multiSelectMax + " cards");
+                        cards.forEach((card) => {
+                            if (card.id === Number(id)) {
+                                card.selected = false;
+                            } 
+                        })
+                    }
                 }
             });
         }
@@ -75,6 +87,9 @@ export default class Player extends React.Component {
     handleFinish = () => {
         this.showAction = false;
         this.multiSelect = false;
+        this.showDiscardCards = false;
+        this.showTrashCards = false;
+        this.setState({handStack: null, status: null});
         this.socket.emit("game", {event: "finish_round"});
     }
 
@@ -85,7 +100,18 @@ export default class Player extends React.Component {
         this.showAction = false;
         this.multiSelect = false;
         this.showDiscardCards = false;
+        this.multiSelectMax = 0;
         this.socket.emit("game", {event: "action_cellar", payload: cards});
+    }
+
+    handleTrashCards = () => {
+        const cards = this.state.handStack
+                        .filter(card => card.selected)
+                        .map(card => card.id);
+        this.showAction = false;
+        this.multiSelect = false;
+        this.showTrashCards = false;
+        this.socket.emit("game", {event: "action_chapel", payload: cards});
     }
 
     handleAction = () => {
@@ -101,36 +127,51 @@ export default class Player extends React.Component {
     
     render() {
         if (this.state.handStack) {
-            let actionButton, discardButton;
+            let actionButton, discardButton, statusBar, trashButton;
             if (this.showAction) {
                 actionButton = <button onClick={this.handleAction}>Play Action</button>;
             }
             if (this.showDiscardCards) {
                 discardButton = <button onClick={this.handleDiscardCards}>Discard Cards</button>;
             }
-            return (<div style={{width: "30%", position: "relative", float: "left", background: "rgb(237, 212, 166)", marginRight: "20px"}}>
+            if (this.showTrashCards) {
+                trashButton = <button onClick={this.handleTrashCards}>Trash up to 4 Cards</button>;
+            }
+            if (this.state.status) {
+            statusBar = (<div style={{width: "100%", position: "relative", fontSize: "xx-large", color: "honeydew"}}>
+                    <i>Buy: {this.state.status.buyCount}, </i>
+                    <i>Action: {this.state.status.actionCount}, </i>
+                    <i>Coin: {this.state.status.value}, </i>
+                </div>
+            )
+            }
+            return (<div className="player" style={{width: "50%", position: "fixed", left: "25%" , bottom: "10px"}}>
+                <div className="playedCardArea" style={{width: "100%"}}>
+                {
+                    this.state.handStack
+                    .filter(card => card.isUsed)
+                    .map((card) => {
+                        return <a><img style={{width: "120px", margin: "10px"}} data={card.id} src={"img/" + card.name +".jpg"}></img></a>
+                    })
+                }
+                </div>
+
+                {statusBar}
+                {actionButton}
+                {discardButton}
+                {trashButton}
+                <button onClick={this.handleFinish}>Finish</button>
+
                 {
                     this.state.handStack
                     .filter(card => !card.isUsed)
                     .map((card) => {
                        if (card.selected) {
-                            return <a><img style={{width: "100px", margin: "10px", border: "10px solid gold"}} data={card.id} onClick={this.handleClick} src={"img/" + card.name +".jpg"}></img></a>
+                            return <a><img style={{width: "120px", margin: "10px", border: "10px solid gold"}} data={card.id} onClick={this.handleClick} src={"img/" + card.name +".jpg"}></img></a>
                        } else {
-                            return <a><img style={{width: "100px", margin: "10px"}} data={card.id} onClick={this.handleClick} src={"img/" + card.name +".jpg"}></img></a>
+                            return <a><img style={{width: "120px", margin: "10px"}} data={card.id} onClick={this.handleClick} src={"img/" + card.name +".jpg"}></img></a>
                        }
                         
-                    })
-                }
-
-                {actionButton}
-                {discardButton}
-                <button onClick={this.handleFinish}>Finish</button>
-
-                {
-                    this.state.handStack
-                    .filter(card => card.isUsed)
-                    .map((card) => {
-                        return <a><img style={{width: "100px", margin: "10px", opacity: "0.7"}} data={card.id} src={"img/" + card.name +".jpg"}></img></a>
                     })
                 }
 

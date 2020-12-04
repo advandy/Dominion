@@ -25,28 +25,15 @@ export default class Gameboard extends React.Component {
     render() {
         if (this.state.cards) {
             return(
-                <div style={{position: "relative"}}>
+                <div style={{position: "fixed", width: "55%", left:"22.5%"}}>
                     {
                         this.STACK.map((card_name) => {
                             let cards = this.state.cards[card_name].cards;
                             let size = cards.length;
-                            return (<div style={{position: "relative", width:"250px", height: "350px", paddingLeft: "10px", float: "left"}}>
-                                <a style={{marginLeft: "110px"}}>left: {size} <button data={cards[0].name} onClick={this.handleBuy}>BUY</button></a>
-                                {
-                                    cards.map((card, idx) => {
-                                        const style = {
-                                            "display":"inline",
-                                            "position": "absolute", 
-                                            "left": "0px", 
-                                            "marginLeft": 2*idx +"px",
-                                            "marginTop": 2*idx +"px" 
-                                        }
-                                        return <li key={card.id} style={style}>
-                                            <img style={{"height": "200px"}} src={"img/" + card.name +".jpg"}></img>
-                                        </li>
-                                    })
-                                }
-                            
+                            return (<div style={{position: "relative", width: "12.5%", display: "inline-flex"}}>
+                                <a> <img style={{height: "170px"}} src={"img/" + card_name +".jpg"}></img></a>
+                                <a style={{borderRadius: "25%", color: "white", background: "red", width: "20px", height: "25px", marginLeft: "-7px"}} class="card_count"> {size} </a>
+                                <button style={{borderRadius: "25%",marginLeft: "-22px", marginTop: "150px"}} data={card_name} onClick={this.handleBuy}>+</button>                        
                             </div>)
                         })
                     }

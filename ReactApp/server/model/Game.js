@@ -178,6 +178,17 @@ class Game {
 		return this.currentPlayer;
 	}
 
+	getPlayerBySessionID(id) {
+		let p = null;
+		this.players.forEach((player) => {
+			if (player.sessionID === id) {
+				return p = player;
+			}
+		});
+
+		return p;
+	}
+
 	getNextPlayer() {
 		this.currentPlayer = this.currentPlayer.next;
 		return this.currentPlayer;

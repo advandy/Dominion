@@ -1,9 +1,10 @@
+import { timingSafeEqual } from 'crypto';
 import React from 'react';
 export default class Player extends React.Component {
     constructor(props) {
       super(props);
       this.socket = props.socket;
-      this.state = {handStack: null, status: null};
+      this.state = {handStack: null, status: null, yourTurn: false};
       this.multiSelect = false;
       this.multiSelectMax = 0; //Chapel action
       this.showAction = false;
@@ -34,17 +35,27 @@ export default class Player extends React.Component {
                     this.showTrashCards = true;
                     this.multiSelectMax = 4;
                 }
+            } else if (msg.event === "militia") {
+                this.setState({status: msg.payload});
+                this.multiSelect = true;
+                return;
             }
  
-            return  this.setState({handStack: msg.payload.handStack.cards, status: msg.payload.status});
+            return  this.setState({handStack: msg.payload.handStack.cards, status: msg.payload.status, yourTurn: msg.payload.yourTurn});
         });
     }
 
     handleClick = (event) => {
+        if (!this.state.yourTurn && !this.state.status.actionRequired) {
+            return;
+        }
         const cards = this.state.handStack;
         const id = event.currentTarget.getAttribute("data");
         let selectedCard = null;
-        this.showAction = false
+        this.showAction = false;
+        if (this.state.status.actionRequired === "militia") {
+            this.multiSelect = true;
+        }
         if (!this.multiSelect) {
             cards.forEach((card) => {
                 if (card.id !== Number(id)) {
@@ -104,6 +115,18 @@ export default class Player extends React.Component {
         this.socket.emit("game", {event: "action_cellar", payload: cards});
     }
 
+    handleMilitia = () => {
+        const cards = this.state.handStack
+                        .filter(card => card.selected)
+                        .map(card => card.id);
+        if (this.state.handStack.length - cards.length !== 3) {
+            return  alert("Discard down to Three Cards");
+        }
+
+        this.multiSelect = false;
+        this.socket.emit("game", {event: "action_militia", payload: cards});
+    }
+
     handleTrashCards = () => {
         const cards = this.state.handStack
                         .filter(card => card.selected)
@@ -127,16 +150,24 @@ export default class Player extends React.Component {
     
     render() {
         if (this.state.handStack) {
-            let actionButton, discardButton, statusBar, trashButton;
-            if (this.showAction) {
+            let actionButton, discardButton, statusBar, trashButton, watchingPlayer, finishButton, militia_discard_button;
+            if (this.showAction && this.state.yourTurn) {
                 actionButton = <button onClick={this.handleAction}>Play Action</button>;
             }
-            if (this.showDiscardCards) {
+            if (this.showDiscardCards && this.state.yourTurn) {
                 discardButton = <button onClick={this.handleDiscardCards}>Discard Cards</button>;
             }
-            if (this.showTrashCards) {
+            if (this.showTrashCards && this.state.yourTurn) {
                 trashButton = <button onClick={this.handleTrashCards}>Trash up to 4 Cards</button>;
             }
+            if (this.state.yourTurn) {
+                finishButton = <button onClick={this.handleFinish}>Finish</button>
+            }
+
+            if (this.state.status.actionRequired === "militia") {
+                militia_discard_button = <button onClick={this.handleMilitia}>Discard down to 3 Cards</button>
+            }
+
             if (this.state.status) {
             statusBar = (<div style={{width: "100%", position: "relative", fontSize: "xx-large", color: "honeydew"}}>
                     <i>Buy: {this.state.status.buyCount}, </i>
@@ -155,12 +186,13 @@ export default class Player extends React.Component {
                     })
                 }
                 </div>
-
+                {watchingPlayer}
                 {statusBar}
                 {actionButton}
                 {discardButton}
                 {trashButton}
-                <button onClick={this.handleFinish}>Finish</button>
+                {finishButton}
+                {militia_discard_button}
 
                 {
                     this.state.handStack

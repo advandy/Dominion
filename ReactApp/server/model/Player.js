@@ -12,6 +12,7 @@ class Player {
 		this.buyCount = 1;
 		this.actionCount = 1;
 		this.readytoBuy = false;
+		this.actionRequired = null;
 	}
 
 	getCurrentValue(initBuy=false) {
@@ -27,8 +28,13 @@ class Player {
 		return {
 			buyCount: this.buyCount,
 			actionCount: this.actionCount,
-			value: this.getCurrentValue()
-		}
+			value: this.getCurrentValue(),
+			actionRequired: this.actionRequired
+		};
+	}
+
+	setActionRequired(name) {
+		this.actionRequired = name;
 	}
 
 	buy(game, stack, callback) {
@@ -110,6 +116,20 @@ class Player {
 		});
 		
 		callback(null, {handStack:  this.fetchCards(count), status: this.getStatus()});
+		return true;
+	}
+
+	takeActionMilitia(cards, callback) {
+		//discard down to three cards
+		
+		cards.forEach((card_id) => {
+            let card = this.handStack.discardCard(card_id);
+            if (!!card) {
+                this.discardStack.addCard(card)
+            }
+		});
+		this.setActionRequired(null);		
+		callback(null, {handStack:  this.handStack, status: this.getStatus()});
 		return true;
 	}
 	
